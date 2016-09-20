@@ -1,0 +1,26 @@
+import org.apache.spark.SparkContext
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.SQLContext
+
+
+object SparkSql {
+    case class Person(Id: Int, val1:String,val2:String,val3:String)
+
+  def main(args:Array[String]){
+    
+    val conf = new SparkConf().setAppName("Scala Sql").setMaster("local")
+    val sc = new SparkContext(conf)
+    val sqlcontext = new SQLContext(sc)
+    import sqlcontext.implicits._
+    val file =sc.textFile("/home/testsql")
+    file.collect().foreach(println)
+    val file_table=file.map(c => c.split(",")).map(records => Person(records(0).toInt,records(1),records(2),records(3))).toDF()
+    file_table.show()
+    file_table.registerTempTable("testtable")
+    val result = sqlcontext.sql("select * from testtable where Id > 3")
+  //  result.saveAsParquetFile("/home/testtable.parquet")
+    val parqfile = sqlcontext.parquetFile("/home/testtable.parquet/")
+    parqfile.schema
+    parqfile.show()
+}
+}
